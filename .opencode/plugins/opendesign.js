@@ -14,11 +14,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Minimal frontmatter extractor (avoids external deps).
 const extractAndStripFrontmatter = (content) => {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return { frontmatter: {}, content };
+  // ⚡ Bolt optimization: Avoid regex backtracking on large markdown files
+  // Using string manipulation instead of regex is significantly faster for long inputs
+  if (!content.startsWith('---\n')) return { frontmatter: {}, content };
 
-  const frontmatterStr = match[1];
-  const body = match[2];
+  const endIdx = content.indexOf('\n---\n', 3);
+  if (endIdx === -1) return { frontmatter: {}, content };
+
+  const frontmatterStr = content.slice(4, endIdx);
+  const body = content.slice(endIdx + 5);
   const frontmatter = {};
 
   for (const line of frontmatterStr.split('\n')) {

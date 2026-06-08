@@ -69,14 +69,14 @@ Always use **8289**.
    PROJECT_ROOT=$(pwd)
    ```
    Then start:
-   - python3: `python3 -m http.server 8289 --directory "$PROJECT_ROOT" &`
-   - python:  `python  -m http.server 8289 --directory "$PROJECT_ROOT" &`
-   - node:    `npx --yes serve -l 8289 "$PROJECT_ROOT" &`
+   - python3: `python3 -m http.server 8289 --bind 127.0.0.1 --directory "$PROJECT_ROOT" &`
+   - python:  `python  -m http.server 8289 --bind 127.0.0.1 --directory "$PROJECT_ROOT" &`
+   - node:    `npx --yes serve -l tcp://127.0.0.1:8289 "$PROJECT_ROOT" &`
 
    **Windows** — `cd` to the project root first (the `--directory` flag is available on Python 3.7+ but `cd` is the safest cross-version approach), then start:
-   - python:  `Start-Process python -ArgumentList '-m','http.server','8289' -WorkingDirectory (Get-Location) -WindowStyle Hidden`
-   - python3: `Start-Process python3 -ArgumentList '-m','http.server','8289' -WorkingDirectory (Get-Location) -WindowStyle Hidden`
-   - node:    `Start-Process npx -ArgumentList '--yes','serve','-l','8289',(Get-Location) -WindowStyle Hidden`
+   - python:  `Start-Process python -ArgumentList '-m','http.server','8289','--bind','127.0.0.1' -WorkingDirectory (Get-Location) -WindowStyle Hidden`
+   - python3: `Start-Process python3 -ArgumentList '-m','http.server','8289','--bind','127.0.0.1' -WorkingDirectory (Get-Location) -WindowStyle Hidden`
+   - node:    `Start-Process npx -ArgumentList '--yes','serve','-l','tcp://127.0.0.1:8289',(Get-Location) -WindowStyle Hidden`
 
    Wait 1–2 seconds after starting, then confirm the port is now bound using the same check from step 2 for the detected platform. If nothing is bound after the wait, report: "Server failed to start. Try running `python -m http.server 8289` manually from your project root." Then stop.
 

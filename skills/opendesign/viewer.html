@@ -245,14 +245,28 @@
 
     let activeItem = null;
 
+    function sanitizeUrl(url) {
+      try {
+        const parsed = new URL(url, window.location.href);
+        if (['javascript:', 'vbscript:', 'data:'].includes(parsed.protocol.toLowerCase())) {
+          return 'about:blank';
+        }
+        return url;
+      } catch (e) {
+        return 'about:blank';
+      }
+    }
+
     function loadFile(path, label, el) {
       if (activeItem) activeItem.classList.remove('active');
       activeItem = el;
       el.classList.add('active');
 
-      previewFrame.src = path;
+      // 🛡️ Sentinel: Sanitize URL to prevent XSS via manifest path injection
+      const safePath = sanitizeUrl(path);
+      previewFrame.src = safePath;
       previewPath.textContent = path;
-      previewOpen.href = path;
+      previewOpen.href = safePath;
       previewBar.style.display = 'flex';
       emptyState.style.display = 'none';
       previewFrame.style.display = 'block';

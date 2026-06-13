@@ -5,10 +5,10 @@
  * and registers the skills directory via config hook (no symlinks needed).
  */
 
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import { fileURLToPath } from 'url';
+import path from "path";
+import fs from "fs";
+import os from "os";
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -21,11 +21,14 @@ const extractAndStripFrontmatter = (content) => {
   const body = match[2];
   const frontmatter = {};
 
-  for (const line of frontmatterStr.split('\n')) {
-    const colonIdx = line.indexOf(':');
+  for (const line of frontmatterStr.split("\n")) {
+    const colonIdx = line.indexOf(":");
     if (colonIdx > 0) {
       const key = line.slice(0, colonIdx).trim();
-      const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '');
+      const value = line
+        .slice(colonIdx + 1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
       frontmatter[key] = value;
     }
   }
@@ -34,12 +37,12 @@ const extractAndStripFrontmatter = (content) => {
 };
 
 const normalizePath = (p, homeDir) => {
-  if (!p || typeof p !== 'string') return null;
+  if (!p || typeof p !== "string") return null;
   let normalized = p.trim();
   if (!normalized) return null;
-  if (normalized.startsWith('~/')) {
+  if (normalized.startsWith("~/")) {
     normalized = path.join(homeDir, normalized.slice(2));
-  } else if (normalized === '~') {
+  } else if (normalized === "~") {
     normalized = homeDir;
   }
   return path.resolve(normalized);
@@ -47,18 +50,23 @@ const normalizePath = (p, homeDir) => {
 
 export const OpenDesignPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
-  const opendesignSkillsDir = path.resolve(__dirname, '../../skills');
+  const opendesignSkillsDir = path.resolve(__dirname, "../../skills");
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
-  const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
+  const configDir = envConfigDir || path.join(homeDir, ".config/opencode");
 
-  const getBootstrapContent = () => {
-    const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+  let cachedBootstrapContent = null;
 
-    const fullContent = fs.readFileSync(skillPath, 'utf8');
-    const { content } = extractAndStripFrontmatter(fullContent);
+  // ⚡ Bolt Optimization: Cache static file content and use async file reading
+  // to avoid blocking the event loop on every chat turn.
+  const getBootstrapContent = async () => {
+    if (cachedBootstrapContent !== null) return cachedBootstrapContent;
 
-    const toolMapping = `**Tool Mapping for OpenCode:**
+    const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
+    try {
+      const fullContent = await fs.promises.readFile(skillPath, "utf8");
+      const { content } = extractAndStripFrontmatter(fullContent);
+
+      const toolMapping = `**Tool Mapping for OpenCode:**
 When OpenDesign skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`todowrite\`
 - \`Task\` tool with subagents → OpenCode's subagent system (@mention)
@@ -67,7 +75,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    return `<EXTREMELY_IMPORTANT>
+      cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -76,6 +84,15 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        cachedBootstrapContent = undefined;
+      } else {
+        throw err;
+      }
+    }
+
+    return cachedBootstrapContent;
   };
 
   return {
@@ -90,11 +107,11 @@ ${toolMapping}
     },
 
     // Use system prompt transform for compatibility with current OpenCode builds.
-    'experimental.chat.system.transform': async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+    "experimental.chat.system.transform": async (_input, output) => {
+      const bootstrap = await getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }
-    }
+    },
   };
 };

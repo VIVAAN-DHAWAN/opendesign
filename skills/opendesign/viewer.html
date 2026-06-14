@@ -250,6 +250,18 @@
       activeItem = el;
       el.classList.add('active');
 
+      // 🛡️ Sentinel: Block dangerous protocols to prevent DOM XSS
+      try {
+        const url = new URL(path, window.location.href);
+        if (['javascript:', 'vbscript:', 'data:'].includes(url.protocol)) {
+          console.warn('Blocked dangerous URL protocol:', url.protocol);
+          path = '#';
+        }
+      } catch (e) {
+        // Invalid URL, leave as is or default to #
+        path = '#';
+      }
+
       previewFrame.src = path;
       previewPath.textContent = path;
       previewOpen.href = path;

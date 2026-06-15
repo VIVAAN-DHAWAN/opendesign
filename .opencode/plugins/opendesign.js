@@ -12,6 +12,10 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// ⚡ Bolt Optimization: Cache bootstrap content to prevent synchronous file system reads on every chat turn in the hot path.
+let cachedBootstrapContent = null;
+let bootstrapContentCached = false; // Flag to handle null result caching
+
 // Minimal frontmatter extractor (avoids external deps).
 const extractAndStripFrontmatter = (content) => {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -52,8 +56,16 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
   const getBootstrapContent = () => {
+    if (bootstrapContentCached) {
+      return cachedBootstrapContent;
+    }
+
     const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+    if (!fs.existsSync(skillPath)) {
+      bootstrapContentCached = true;
+      cachedBootstrapContent = null;
+      return null;
+    }
 
     const fullContent = fs.readFileSync(skillPath, 'utf8');
     const { content } = extractAndStripFrontmatter(fullContent);
@@ -67,7 +79,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    return `<EXTREMELY_IMPORTANT>
+    const finalResult = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -76,6 +88,10 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+
+    bootstrapContentCached = true;
+    cachedBootstrapContent = finalResult;
+    return finalResult;
   };
 
   return {

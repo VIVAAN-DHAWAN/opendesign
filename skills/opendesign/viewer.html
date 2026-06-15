@@ -246,6 +246,12 @@
     let activeItem = null;
 
     function loadFile(path, label, el) {
+      // 🛡️ Sentinel: Prevent XSS from malicious paths in manifest
+      if (/^\s*javascript:/i.test(path)) {
+        console.error('Blocked unsafe URL:', path);
+        return;
+      }
+
       if (activeItem) activeItem.classList.remove('active');
       activeItem = el;
       el.classList.add('active');

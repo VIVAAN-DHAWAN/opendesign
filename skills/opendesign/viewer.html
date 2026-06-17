@@ -250,9 +250,13 @@
       activeItem = el;
       el.classList.add('active');
 
-      previewFrame.src = path;
-      previewPath.textContent = path;
-      previewOpen.href = path;
+      // 🛡️ Sentinel: Prevent XSS via javascript: URIs
+      const isDangerous = /^\s*javascript:/i.test(path);
+      const safePath = isDangerous ? 'about:blank' : path;
+
+      previewFrame.src = safePath;
+      previewPath.textContent = safePath;
+      previewOpen.href = safePath;
       previewBar.style.display = 'flex';
       emptyState.style.display = 'none';
       previewFrame.style.display = 'block';
@@ -263,7 +267,8 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function renderSidebar(manifest) {

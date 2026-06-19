@@ -250,9 +250,12 @@
       activeItem = el;
       el.classList.add('active');
 
-      previewFrame.src = path;
-      previewPath.textContent = path;
-      previewOpen.href = path;
+      // 🛡️ Sentinel: Sanitize URI to prevent DOM-based XSS
+      const safePath = /^\s*(javascript|data):/i.test(path) ? 'about:blank' : path;
+
+      previewFrame.src = safePath;
+      previewPath.textContent = safePath;
+      previewOpen.href = safePath;
       previewBar.style.display = 'flex';
       emptyState.style.display = 'none';
       previewFrame.style.display = 'block';

@@ -246,6 +246,12 @@
     let activeItem = null;
 
     function loadFile(path, label, el) {
+      // 🛡️ Sentinel: Block potential XSS from javascript: or data: URIs
+      if (/^\s*(javascript|data|vbscript):/i.test(path)) {
+        console.warn('[OpenDesign] Blocked potentially unsafe URI');
+        return;
+      }
+
       if (activeItem) activeItem.classList.remove('active');
       activeItem = el;
       el.classList.add('active');

@@ -58,19 +58,19 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, ".config/opencode");
 
-  // ⚡ Bolt Optimization: Cache the bootstrap content to avoid synchronous fs.readFileSync on every chat turn.
   let cachedBootstrapContent = null;
 
-  const getBootstrapContent = () => {
+  // ⚡ Bolt Optimization: Cache static file content and use async file reading
+  // to avoid blocking the event loop on every chat turn.
+  const getBootstrapContent = async () => {
     if (cachedBootstrapContent !== null) return cachedBootstrapContent;
 
     const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
-    if (!fs.existsSync(skillPath)) return null;
+    try {
+      const fullContent = await fs.promises.readFile(skillPath, "utf8");
+      const { content } = extractAndStripFrontmatter(fullContent);
 
-    const fullContent = fs.readFileSync(skillPath, "utf8");
-    const { content } = extractAndStripFrontmatter(fullContent);
-
-    const toolMapping = `**Tool Mapping for OpenCode:**
+      const toolMapping = `**Tool Mapping for OpenCode:**
 When OpenDesign skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`todowrite\`
 - \`Task\` tool with subagents → OpenCode's subagent system (@mention)
@@ -79,7 +79,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
+      cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -88,6 +88,13 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        cachedBootstrapContent = undefined;
+      } else {
+        throw err;
+      }
+    }
 
     return cachedBootstrapContent;
   };
@@ -105,7 +112,7 @@ ${toolMapping}
 
     // Use system prompt transform for compatibility with current OpenCode builds.
     "experimental.chat.system.transform": async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+      const bootstrap = await getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }

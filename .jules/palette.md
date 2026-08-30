@@ -1,3 +1,3 @@
-## 2026-06-16 - Keyboard Accessibility in OpenDesign Viewer
-**Learning:** Custom interactive elements like <span> and <summary> in the viewer lack native focus indicators, making keyboard navigation difficult.
-**Action:** Always define explicit :focus-visible outlines and descriptive aria-labels for custom interactive UI elements to ensure accessibility.
+## 2026-06-17 - Focus Visible Accessibility for Custom UI Elements
+**Learning:** Custom interactive elements (like spans acting as buttons or detail summaries) require explicit :focus-visible styles and aria labels for screen reader compatibility.
+**Action:** Always add outline offsets and ARIA roles when implementing non-native button controls.

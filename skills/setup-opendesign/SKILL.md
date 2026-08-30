@@ -41,4 +41,4 @@ You are setting up the OpenDesign output environment for this project for the fi
    ```
 
 4. **Announce to the user:**
-   > OpenDesign is set up. Open `./opendesign/index.html` in your browser to view mockups. If previews don't load, serve the folder with `python -m http.server 8080` and open `http://localhost:8080/opendesign/`.
+   > OpenDesign is set up. Open `./opendesign/index.html` in your browser to view mockups. If previews don't load, serve the folder with `python -m http.server 8080 --bind 127.0.0.1` and open `http://localhost:8080/opendesign/`.

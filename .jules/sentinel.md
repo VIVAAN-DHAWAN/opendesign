@@ -1,4 +1,4 @@
-## 2024-05-24 - Preview Server Binding
- **Vulnerability:** Preview server was binding to all interfaces (0.0.0.0), potentially exposing mockups to the local network.
- **Learning:** HTTP servers should be explicitly bound to localhost when meant only for local viewing.
- **Prevention:** Added `--bind 127.0.0.1` flag for `python -m http.server` and `-l tcp://127.0.0.1:8289` for `serve` in the run-opendesign skill.
+## 2026-06-07 - [Restrict Local Server Binding to localhost]
+**Vulnerability:** Local development servers (python's `http.server` and Node's `serve`) default to binding to `0.0.0.0` (all interfaces) rather than `127.0.0.1` (localhost). This exposes local project files to anyone on the same network.
+**Learning:** Tools starting local preview servers must explicitly bind to localhost to prevent unintentional network exposure, especially when serving source code or artifacts dynamically.
+**Prevention:** Always use `--bind 127.0.0.1` with `http.server` and `-l tcp://127.0.0.1:<port>` with `serve` (or equivalent arguments in other tools) to restrict access strictly to the local machine.

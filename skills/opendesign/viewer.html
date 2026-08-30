@@ -259,24 +259,14 @@
       let activeItem = null;
 
       function loadFile(path, label, el) {
+        // Security: Prevent execution of unsafe URL protocols
+        // Bypasses via leading whitespace/control chars are blocked
+        const unsafeProtocols = /^\s*(javascript|vbscript|data):/i;
+        const safePath = unsafeProtocols.test(path) ? "about:blank" : path;
+
         if (activeItem) activeItem.classList.remove("active");
         activeItem = el;
         el.classList.add("active");
-
-        // Security: Sanitize path to prevent XSS
-        let safePath = path;
-        try {
-          const url = new URL(path, window.location.href);
-          if (
-            ["javascript:", "vbscript:", "data:"].includes(
-              url.protocol.toLowerCase(),
-            )
-          ) {
-            safePath = "about:blank";
-          }
-        } catch (e) {
-          // Fallback if URL parsing fails
-        }
 
         previewFrame.src = safePath;
         previewPath.textContent = safePath;

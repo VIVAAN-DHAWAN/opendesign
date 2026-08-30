@@ -1,3 +1,3 @@
-## 2024-06-16 - Cache Bootstrap Content in Chat Transform Hook
-**Learning:** The `experimental.chat.system.transform` hook runs on every chat turn. Synchronous operations like `fs.readFileSync` in this hot path block the main thread and degrade performance.
-**Action:** Cache the results of static file reads and expensive parsing operations that are required by frequently called hooks to ensure the main thread remains unblocked.
+## 2026-06-17 - Cached Synchronous I/O in Chat Transform Hooks
+**Learning:** In OpenCode plugins, `experimental.chat.system.transform` hooks run on every single chat turn. Performing synchronous operations like `fs.readFileSync` within these hooks blocks the main thread frequently, causing a significant performance bottleneck during chat interactions.
+**Action:** Always cache the results of synchronous I/O operations outside the hook function (e.g., in a closure or module scope) when they don't need to be dynamically re-evaluated on every turn.

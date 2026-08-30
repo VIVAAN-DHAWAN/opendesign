@@ -242,7 +242,7 @@
     <main class="preview" id="preview-pane">
       <div class="preview-bar" id="preview-bar" style="display:none">
         <span class="preview-bar-path" id="preview-path"></span>
-        <a class="preview-bar-open" id="preview-open" href="#" target="_blank">Open ↗</a>
+        <a class="preview-bar-open" id="preview-open" href="#" target="_blank" rel="noopener noreferrer">Open ↗</a>
       </div>
       <iframe id="preview" title="Preview" style="display:none"></iframe>
       <div class="empty-state" id="empty-state">
@@ -285,21 +285,12 @@
       activeItem = el;
       el.classList.add('active');
 
-      // 🛡️ Sentinel: Block dangerous protocols to prevent DOM XSS
-      try {
-        const url = new URL(path, window.location.href);
-        if (['javascript:', 'vbscript:', 'data:'].includes(url.protocol)) {
-          console.warn('Blocked dangerous URL protocol:', url.protocol);
-          path = '#';
-        }
-      } catch (e) {
-        // Invalid URL, leave as is or default to #
-        path = '#';
-      }
+      // Prevent XSS from malicious protocols (trim leading whitespace first)
+      const sanitizedPath = /^\s*(javascript|vbscript|data):/i.test(path) ? 'about:blank' : path;
 
-      previewFrame.src = path;
-      previewPath.textContent = path;
-      previewOpen.href = safePath;
+      previewFrame.src = sanitizedPath;
+      previewPath.textContent = sanitizedPath;
+      previewOpen.href = sanitizedPath;
       previewBar.style.display = 'flex';
       emptyState.style.display = 'none';
       previewFrame.style.display = 'block';
@@ -310,7 +301,8 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function renderSidebar(manifest) {

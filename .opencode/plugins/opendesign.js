@@ -74,9 +74,16 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   // ⚡ Bolt Optimization: Cache bootstrap content to prevent blocking the main thread with fs.readFileSync on every chat turn
   let cachedBootstrapContent = undefined;
 
+  // ⚡ Bolt Optimization: Cache bootstrap content to prevent synchronous file reading on every chat turn
+  let cachedBootstrapContent = undefined;
+
   const getBootstrapContent = () => {
-    if (cachedBootstrapContent !== undefined) {
-      return cachedBootstrapContent;
+    if (cachedBootstrapContent !== undefined) return cachedBootstrapContent;
+
+    const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      cachedBootstrapContent = null;
+      return null;
     }
 
     const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
@@ -124,6 +131,7 @@ ${content}
 
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
+
     return cachedBootstrapContent;
   };
 

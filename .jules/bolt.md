@@ -1,3 +1,3 @@
-## 2026-06-15 - Cached Plugin Bootstrap Content
-**Learning:** Synchronous operations like `fs.readFileSync` in hot paths such as OpenCode plugin hooks (`experimental.chat.system.transform`) block the main thread and degrade performance on every chat turn.
-**Action:** Use a module-level cache variable to store and reuse statically loaded file contents in plugin hooks.
+## 2024-06-16 - Cache Bootstrap Content in Chat Transform Hook
+**Learning:** The `experimental.chat.system.transform` hook runs on every chat turn. Synchronous operations like `fs.readFileSync` in this hot path block the main thread and degrade performance.
+**Action:** Cache the results of static file reads and expensive parsing operations that are required by frequently called hooks to ensure the main thread remains unblocked.

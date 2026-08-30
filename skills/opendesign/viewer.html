@@ -263,19 +263,18 @@
         activeItem = el;
         el.classList.add("active");
 
-        // 🛡️ Sentinel: Prevent javascript: and data: URI XSS vectors
+        // 🛡️ Sentinel: Sanitize path to prevent javascript: and data: URI XSS
         let safePath = path;
-        const lowerPath = path.trim().toLowerCase();
+        const lowerPath = safePath.trim().toLowerCase();
         if (
           lowerPath.startsWith("javascript:") ||
-          lowerPath.startsWith("data:") ||
-          lowerPath.startsWith("vbscript:")
+          lowerPath.startsWith("data:")
         ) {
           safePath = "about:blank";
         }
 
         previewFrame.src = safePath;
-        previewPath.textContent = path;
+        previewPath.textContent = safePath;
         previewOpen.href = safePath;
         previewBar.style.display = "flex";
         emptyState.style.display = "none";

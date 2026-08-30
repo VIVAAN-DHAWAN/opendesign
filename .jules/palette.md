@@ -1,3 +1,4 @@
-## 2026-06-10 - Added keyboard and screen reader accessibility to custom UI
-**Learning:** Custom span-based interactive elements require manual `role="button"`, focus-visible styles, and `aria-current` states to be accessible. Always try to use native elements (like `<button>`) to avoid this extra work.
-**Action:** Applied these attributes to `.file-item` elements and ensured focus outlines are clear.
+
+## 2026-06-13 - Focus Visible on Interactive Elements
+**Learning:** Custom UI elements like spans with `tabindex="0"` and `<summary>` tags lose default browser focus rings when styled. Users relying on keyboard navigation can't see which item is focused.
+**Action:** Always add explicit `:focus-visible` styles and `aria-label`s for short-text links when creating custom interactive elements.

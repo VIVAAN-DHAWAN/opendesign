@@ -189,6 +189,7 @@
     }
 
     .preview-bar-open:hover { background: rgba(74,158,255,0.1); }
+    .preview-bar-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     iframe#preview {
       flex: 1;
@@ -242,7 +243,7 @@
     <main class="preview" id="preview-pane">
       <div class="preview-bar" id="preview-bar" style="display:none">
         <span class="preview-bar-path" id="preview-path"></span>
-        <a class="preview-bar-open" id="preview-open" href="#" target="_blank" rel="noopener noreferrer">Open ↗</a>
+        <a class="preview-bar-open" id="preview-open" href="#" target="_blank" aria-label="Open preview in new tab">Open ↗</a>
       </div>
       <iframe id="preview" title="Preview" style="display:none"></iframe>
       <div class="empty-state" id="empty-state">
@@ -341,10 +342,10 @@
         height: 100vh;
       }
 
-          html += `<details class="group" open><summary aria-label="Toggle ${esc(group.slug)}">${esc(group.slug)}</summary>`;
+          html += `<details class="group" open><summary aria-label="Toggle ${esc(group.slug)} folder">${esc(group.slug)}</summary>`;
           for (const file of files) {
             // Use data attributes; attach listeners after inserting
-            html += `<span class="file-item" role="button" aria-label="Preview ${esc(file.label)}" tabindex="0" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
+            html += `<span class="file-item" role="button" tabindex="0" aria-label="Preview ${esc(file.label)}" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
           }
         }
 

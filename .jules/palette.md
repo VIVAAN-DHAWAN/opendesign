@@ -1,3 +1,3 @@
-## 2026-06-15 - Focus Visible Styles for Custom Elements
-**Learning:** Custom interactive elements like `span` with tabindex and `summary` need explicit `:focus-visible` styles and `aria-label`s for proper keyboard navigation and screen reader support.
-**Action:** Always define `:focus-visible` outlines and `aria-label` attributes when creating non-standard interactive UI components.
+## 2026-06-16 - Keyboard Accessibility in OpenDesign Viewer
+**Learning:** Custom interactive elements like <span> and <summary> in the viewer lack native focus indicators, making keyboard navigation difficult.
+**Action:** Always define explicit :focus-visible outlines and descriptive aria-labels for custom interactive UI elements to ensure accessibility.

@@ -68,11 +68,14 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
 
   let cachedBootstrapContent = undefined;
 
+  // ⚡ Bolt Optimization: Cache bootstrap content to prevent synchronous fs.readFileSync on every chat turn.
+  let cachedBootstrapContent = null;
+
   const getBootstrapContent = () => {
-    // ⚡ Bolt Optimization: Cache the bootstrap content to avoid synchronous disk I/O on every chat turn, preventing main thread blocking.
-    if (cachedBootstrapContent !== undefined) {
-      return cachedBootstrapContent;
-    }
+    if (cachedBootstrapContent !== null) return cachedBootstrapContent;
+
+    const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
+    if (!fs.existsSync(skillPath)) return null;
 
     const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
     if (!fs.existsSync(skillPath)) {
@@ -104,7 +107,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    const result = `<EXTREMELY_IMPORTANT>
+    cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -114,8 +117,7 @@ ${content}
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
 
-    cachedBootstrapContent = result;
-    return result;
+    return cachedBootstrapContent;
   };
 
   return {

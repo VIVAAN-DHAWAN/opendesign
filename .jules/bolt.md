@@ -1,3 +1,4 @@
-## 2026-06-17 - Cached Synchronous I/O in Chat Transform Hooks
-**Learning:** In OpenCode plugins, `experimental.chat.system.transform` hooks run on every single chat turn. Performing synchronous operations like `fs.readFileSync` within these hooks blocks the main thread frequently, causing a significant performance bottleneck during chat interactions.
-**Action:** Always cache the results of synchronous I/O operations outside the hook function (e.g., in a closure or module scope) when they don't need to be dynamically re-evaluated on every turn.
+
+## 2026-06-18 - OpenCode Plugin Hot Paths
+**Learning:** OpenCode plugin hooks like `experimental.chat.system.transform` execute on every chat turn. Synchronous operations (`fs.readFileSync`) here block the main thread repeatedly.
+**Action:** Always memoize/cache file reads and parsing inside plugin lifecycle hooks.

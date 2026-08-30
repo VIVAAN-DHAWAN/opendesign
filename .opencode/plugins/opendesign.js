@@ -58,23 +58,26 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, ".config/opencode");
 
-  // ⚡ Bolt Optimization: Cache the file content to prevent unnecessary reads on every chat turn
-  let cachedBootstrap = null;
+  // ⚡ Bolt Optimization: Cache the bootstrap content in memory
+  // This prevents repeated disk I/O and parsing on every chat turn.
+  let cachedBootstrapContent = null;
 
   const getBootstrapContent = async () => {
-    if (cachedBootstrap) return cachedBootstrap;
+    // Return early from cache to avoid blocking the main thread during frequent interactions.
+    if (cachedBootstrapContent !== null) return cachedBootstrapContent;
 
     const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
 
-    // ⚡ Bolt Optimization: Use async fs.promises to prevent blocking the main thread
-    // during the 'experimental.chat.system.transform' hot path which runs every turn.
+    // ⚡ Bolt Optimization: Replace synchronous fs.readFileSync with fs.promises.readFile
+    // This ensures we don't block the Node.js event loop during the initial read.
+    let fullContent;
     try {
-      await fs.promises.access(skillPath);
-    } catch {
-      return null;
+      fullContent = await fs.promises.readFile(skillPath, "utf8");
+    } catch (e) {
+      if (e.code === "ENOENT") return null;
+      throw e;
     }
 
-    const fullContent = await fs.promises.readFile(skillPath, "utf8");
     const { content } = extractAndStripFrontmatter(fullContent);
 
     const toolMapping = `**Tool Mapping for OpenCode:**
@@ -86,7 +89,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    cachedBootstrap = `<EXTREMELY_IMPORTANT>
+    cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -96,7 +99,7 @@ ${content}
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
 
-    return cachedBootstrap;
+    return cachedBootstrapContent;
   };
 
   return {

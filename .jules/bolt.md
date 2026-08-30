@@ -1,4 +1,3 @@
-## 2024-06-08 - Synchronous Disk I/O in OpenCode System Transform Hooks
-
-**Learning:** The `experimental.chat.system.transform` hook in OpenCode runs on every chat turn. Using synchronous disk I/O (`fs.readFileSync`) within this hot path blocks the main thread, potentially causing UI stuttering and degrading performance as the app scales.
-**Action:** Always use asynchronous file operations (`fs.promises.readFile`) and cache the results where possible when reading static assets or configurations in frequently executed hooks.
+## 2026-06-10 - [Optimize chat transform hook in OpenDesign plugin]
+**Learning:** [Avoiding synchronous file system operations in OpenCode plugin chat transform hooks prevents blocking the main thread during frequent chat interactions.]
+**Action:** [Always use asynchronous methods like `fs.promises.readFile` and implement caching for files that are read frequently or on hot paths.]

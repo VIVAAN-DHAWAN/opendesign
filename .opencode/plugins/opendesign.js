@@ -58,17 +58,15 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, ".config/opencode");
 
+  // ⚡ Bolt Optimization: Cache the bootstrap content to avoid synchronous fs.readFileSync on every chat turn.
   let cachedBootstrapContent = null;
 
   const getBootstrapContent = () => {
-    if (cachedBootstrapContent !== null) {
-      return cachedBootstrapContent;
-    }
+    if (cachedBootstrapContent !== null) return cachedBootstrapContent;
 
     const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
     if (!fs.existsSync(skillPath)) return null;
 
-    // ⚡ Bolt Optimization: Synchronous file reading in a transform hook blocks the main thread on every chat turn. We cache the content instead.
     const fullContent = fs.readFileSync(skillPath, "utf8");
     const { content } = extractAndStripFrontmatter(fullContent);
 

@@ -1,7 +1,3 @@
-## 2024-05-24 - Initial Journal
-**Learning:** Starting performance journal.
-**Action:** Log critical findings.
-
-## 2026-06-11 - Blocking Transform Hook
-**Learning:** Synchronous file reading (`fs.readFileSync`) in plugin transform hooks like `experimental.chat.system.transform` will block the main thread on every chat turn.
-**Action:** Cache the result of expensive synchronous operations in the module scope so they only run once.
+## 2024-06-12 - Sync I/O in Chat Transforms
+**Learning:** In OpenCode plugins, hooks like `experimental.chat.system.transform` run on every chat turn. Performing synchronous operations like `fs.readFileSync` in these hot paths creates a performance bottleneck by blocking the main thread repeatedly.
+**Action:** Always cache file contents read during initialization or the first run of hot path functions like chat transforms, avoiding repetitive blocking disk I/O.

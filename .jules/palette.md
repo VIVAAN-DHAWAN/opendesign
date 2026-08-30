@@ -1,3 +1,3 @@
-## 2024-05-24 - Accessibility focus management in viewer.html
-**Learning:** Custom interactive elements like spans serving as list items need explicit `role="button"` and programmatic toggling of `aria-current="true"` in JS to be properly announced by screen readers, in addition to explicit `:focus-visible` styles for keyboard navigation visibility.
-**Action:** Always verify keyboard focus visibility and screen reader semantics when building custom tree/list interactive components.
+## 2026-06-10 - Added keyboard and screen reader accessibility to custom UI
+**Learning:** Custom span-based interactive elements require manual `role="button"`, focus-visible styles, and `aria-current` states to be accessible. Always try to use native elements (like `<button>`) to avoid this extra work.
+**Action:** Applied these attributes to `.file-item` elements and ensured focus outlines are clear.

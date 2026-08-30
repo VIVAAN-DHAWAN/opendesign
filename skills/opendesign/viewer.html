@@ -259,24 +259,28 @@
       let activeItem = null;
 
       function loadFile(path, label, el) {
-        // 🛡️ SECURITY: Prevent loading unsafe URIs which could lead to XSS
-        const urlLower = String(path).toLowerCase().trim();
-        if (
-          urlLower.startsWith("javascript:") ||
-          urlLower.startsWith("data:") ||
-          urlLower.startsWith("vbscript:")
-        ) {
-          console.warn("[Security] Blocked unsafe URL scheme:", path);
-          return;
-        }
-
         if (activeItem) activeItem.classList.remove("active");
         activeItem = el;
         el.classList.add("active");
 
-        previewFrame.src = path;
-        previewPath.textContent = path;
-        previewOpen.href = path;
+        // Security: Sanitize path to prevent XSS
+        let safePath = path;
+        try {
+          const url = new URL(path, window.location.href);
+          if (
+            ["javascript:", "vbscript:", "data:"].includes(
+              url.protocol.toLowerCase(),
+            )
+          ) {
+            safePath = "about:blank";
+          }
+        } catch (e) {
+          // Fallback if URL parsing fails
+        }
+
+        previewFrame.src = safePath;
+        previewPath.textContent = safePath;
+        previewOpen.href = safePath;
         previewBar.style.display = "flex";
         emptyState.style.display = "none";
         previewFrame.style.display = "block";
@@ -287,8 +291,7 @@
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;"); // 🛡️ SECURITY: Escape single quotes
+          .replace(/"/g, "&quot;");
       }
 
       function renderSidebar(manifest) {

@@ -12,6 +12,10 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// ⚡ Bolt Optimization: Cache bootstrap content to prevent synchronous file system reads on every chat turn in the hot path.
+let cachedBootstrapContent = null;
+let bootstrapContentCached = false; // Flag to handle null result caching
+
 // Minimal frontmatter extractor (avoids external deps).
 const extractAndStripFrontmatter = (content) => {
   // ⚡ Bolt optimization: Avoid regex backtracking on large markdown files
@@ -61,11 +65,16 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   let cachedBootstrapContent = null;
 
   const getBootstrapContent = () => {
-    // ⚡ Bolt Optimization: Cache bootstrap content to prevent blocking the main thread on every chat turn.
-    if (cachedBootstrapContent !== null) return cachedBootstrapContent;
+    if (bootstrapContentCached) {
+      return cachedBootstrapContent;
+    }
 
     const skillPath = path.join(opendesignSkillsDir, 'opendesign', 'SKILL.md');
-    if (!fs.existsSync(skillPath)) return null;
+    if (!fs.existsSync(skillPath)) {
+      bootstrapContentCached = true;
+      cachedBootstrapContent = null;
+      return null;
+    }
 
   // ⚡ Bolt Optimization: Cache static file content and use async file reading
   // to avoid blocking the event loop on every chat turn.
@@ -86,7 +95,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
+    const finalResult = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -96,7 +105,9 @@ ${content}
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
 
-    return cachedBootstrapContent;
+    bootstrapContentCached = true;
+    cachedBootstrapContent = finalResult;
+    return finalResult;
   };
 
   return {

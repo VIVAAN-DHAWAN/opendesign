@@ -1,4 +1,4 @@
 
-## 2026-06-18 - OpenCode Plugin Hot Paths
-**Learning:** OpenCode plugin hooks like `experimental.chat.system.transform` execute on every chat turn. Synchronous operations (`fs.readFileSync`) here block the main thread repeatedly.
-**Action:** Always memoize/cache file reads and parsing inside plugin lifecycle hooks.
+## 2026-06-19 - Blocking I/O in Chat Transform Hooks
+**Learning:** The experimental.chat.system.transform hook in OpenCode plugins runs on every chat turn. Synchronous operations like fs.readFileSync in this hot path block the main thread and significantly degrade performance.
+**Action:** Cache the result of file reads in module scope so subsequent chat turns return immediately without hitting the filesystem.

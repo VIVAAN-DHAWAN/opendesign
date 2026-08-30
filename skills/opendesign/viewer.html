@@ -294,8 +294,11 @@
     }
 
     function loadFile(path, label, el) {
-      // 🛡️ Sentinel: Sanitize URI to prevent DOM-based XSS
-      const cleanPath = /^\s*(javascript|data):/i.test(path) ? 'about:blank' : path;
+      // 🛡️ Sentinel: Block potential XSS from javascript: or data: URIs
+      if (/^\s*(javascript|data|vbscript):/i.test(path)) {
+        console.warn('[OpenDesign] Blocked potentially unsafe URI');
+        return;
+      }
 
       if (activeItem) activeItem.classList.remove('active');
       activeItem = el;

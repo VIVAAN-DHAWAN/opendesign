@@ -58,26 +58,18 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, ".config/opencode");
 
-  // ⚡ Bolt Optimization: Cache the bootstrap content in memory
-  // This prevents repeated disk I/O and parsing on every chat turn.
   let cachedBootstrapContent = null;
 
-  const getBootstrapContent = async () => {
-    // Return early from cache to avoid blocking the main thread during frequent interactions.
-    if (cachedBootstrapContent !== null) return cachedBootstrapContent;
-
-    const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
-
-    // ⚡ Bolt Optimization: Replace synchronous fs.readFileSync with fs.promises.readFile
-    // This ensures we don't block the Node.js event loop during the initial read.
-    let fullContent;
-    try {
-      fullContent = await fs.promises.readFile(skillPath, "utf8");
-    } catch (e) {
-      if (e.code === "ENOENT") return null;
-      throw e;
+  const getBootstrapContent = () => {
+    if (cachedBootstrapContent !== null) {
+      return cachedBootstrapContent;
     }
 
+    const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
+    if (!fs.existsSync(skillPath)) return null;
+
+    // ⚡ Bolt Optimization: Synchronous file reading in a transform hook blocks the main thread on every chat turn. We cache the content instead.
+    const fullContent = fs.readFileSync(skillPath, "utf8");
     const { content } = extractAndStripFrontmatter(fullContent);
 
     const toolMapping = `**Tool Mapping for OpenCode:**
@@ -115,7 +107,7 @@ ${toolMapping}
 
     // Use system prompt transform for compatibility with current OpenCode builds.
     "experimental.chat.system.transform": async (_input, output) => {
-      const bootstrap = await getBootstrapContent();
+      const bootstrap = getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }

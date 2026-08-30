@@ -115,6 +115,13 @@
       transform: rotate(90deg);
     }
 
+    details.group > summary:focus-visible,
+    .file-item:focus-visible,
+    .preview-bar-open:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
     /* File item */
     .file-item {
       display: block;
@@ -336,10 +343,10 @@
         height: 100vh;
       }
 
-          html += `<details class="group" open><summary aria-label="${esc(group.slug)} group">${esc(group.slug)}</summary>`;
+          html += `<details class="group" open><summary aria-label="Toggle ${esc(group.slug)}">${esc(group.slug)}</summary>`;
           for (const file of files) {
             // Use data attributes; attach listeners after inserting
-            html += `<span class="file-item" role="button" aria-label="Open ${esc(file.label)}" tabindex="0" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
+            html += `<span class="file-item" role="button" aria-label="Preview ${esc(file.label)}" tabindex="0" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
           }
         }
 

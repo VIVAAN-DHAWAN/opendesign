@@ -110,6 +110,7 @@
       details.group > summary:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: -2px;
+        border-radius: 2px;
       }
 
       details.group > summary::before {
@@ -241,7 +242,7 @@
   </head>
   <body>
     <div class="layout">
-      <nav class="sidebar" aria-label="Files">
+      <nav class="sidebar">
         <div class="sidebar-header">OpenDesign</div>
         <div class="sidebar-content" id="sidebar-content">
           <div class="sidebar-empty">Loading…</div>
@@ -251,7 +252,13 @@
       <main class="preview" id="preview-pane">
         <div class="preview-bar" id="preview-bar" style="display: none">
           <span class="preview-bar-path" id="preview-path"></span>
-          <a class="preview-bar-open" id="preview-open" href="#" target="_blank"
+          <a
+            class="preview-bar-open"
+            id="preview-open"
+            href="#"
+            target="_blank"
+            aria-label="Open in new tab"
+            title="Open in new tab"
             >Open ↗</a
           >
         </div>
@@ -274,13 +281,9 @@
       let activeItem = null;
 
       function loadFile(path, label, el) {
-        if (activeItem) {
-          activeItem.classList.remove("active");
-          activeItem.removeAttribute("aria-current");
-        }
+        if (activeItem) activeItem.classList.remove("active");
         activeItem = el;
         el.classList.add("active");
-        el.setAttribute("aria-current", "page");
 
         previewFrame.src = path;
         previewPath.textContent = path;
@@ -323,7 +326,7 @@
             html += `<details class="group" open><summary>${esc(group.slug)}</summary>`;
             for (const file of files) {
               // Use data attributes; attach listeners after inserting
-              html += `<span class="file-item" tabindex="0" role="button" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
+              html += `<span class="file-item" role="button" tabindex="0" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
             }
             html += `</details>`;
           }

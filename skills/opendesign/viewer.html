@@ -136,6 +136,11 @@
         background: var(--sidebar-hover);
       }
 
+      .file-item:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+
       .file-item.active {
         background: var(--sidebar-active-bg);
         color: var(--sidebar-active-text);
@@ -236,7 +241,14 @@
       <main class="preview" id="preview-pane">
         <div class="preview-bar" id="preview-bar" style="display: none">
           <span class="preview-bar-path" id="preview-path"></span>
-          <a class="preview-bar-open" id="preview-open" href="#" target="_blank"
+          <a
+            class="preview-bar-open"
+            id="preview-open"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open preview in new tab"
+            title="Open preview in new tab"
             >Open ↗</a
           >
         </div>
@@ -263,19 +275,9 @@
         activeItem = el;
         el.classList.add("active");
 
-        // 🛡️ Sentinel: Sanitize path to prevent javascript: and data: URI XSS
-        let safePath = path;
-        const lowerPath = safePath.trim().toLowerCase();
-        if (
-          lowerPath.startsWith("javascript:") ||
-          lowerPath.startsWith("data:")
-        ) {
-          safePath = "about:blank";
-        }
-
-        previewFrame.src = safePath;
-        previewPath.textContent = safePath;
-        previewOpen.href = safePath;
+        previewFrame.src = path;
+        previewPath.textContent = path;
+        previewOpen.href = path;
         previewBar.style.display = "flex";
         emptyState.style.display = "none";
         previewFrame.style.display = "block";
@@ -286,8 +288,7 @@
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
+          .replace(/"/g, "&quot;");
       }
 
       function renderSidebar(manifest) {
@@ -315,7 +316,7 @@
             html += `<details class="group" open><summary>${esc(group.slug)}</summary>`;
             for (const file of files) {
               // Use data attributes; attach listeners after inserting
-              html += `<span class="file-item" tabindex="0" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
+              html += `<span class="file-item" role="button" tabindex="0" data-path="${esc(file.path)}" data-label="${esc(file.label)}">${esc(file.label)}</span>`;
             }
             html += `</details>`;
           }

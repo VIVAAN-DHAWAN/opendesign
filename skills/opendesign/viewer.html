@@ -254,7 +254,7 @@
     <main class="preview" id="preview-pane">
       <div class="preview-bar" id="preview-bar" style="display:none">
         <span class="preview-bar-path" id="preview-path"></span>
-        <a class="preview-bar-open" id="preview-open" href="#" target="_blank" aria-label="Open preview in new tab">Open ↗</a>
+        <a class="preview-bar-open" id="preview-open" href="#" target="_blank" rel="noopener noreferrer">Open ↗</a>
       </div>
       <iframe id="preview" title="Preview" style="display:none"></iframe>
       <div class="empty-state" id="empty-state">
@@ -287,23 +287,16 @@
     }
 
     function loadFile(path, label, el) {
-      // 🛡️ Sentinel: Prevent XSS from malicious paths in manifest
-      if (/^\s*javascript:/i.test(path)) {
-        console.error('Blocked unsafe URL:', path);
-        return;
-      }
+      // 🛡️ Sentinel: Sanitize URI to prevent DOM-based XSS
+      const cleanPath = /^\s*(javascript|data):/i.test(path) ? 'about:blank' : path;
 
       if (activeItem) activeItem.classList.remove('active');
       activeItem = el;
       el.classList.add('active');
 
-      // 🛡️ Sentinel: Prevent XSS via javascript: URIs
-      const isDangerous = /^\s*javascript:/i.test(path);
-      const safePath = isDangerous ? 'about:blank' : path;
-
-      previewFrame.src = safePath;
-      previewPath.textContent = safePath;
-      previewOpen.href = safePath;
+      previewFrame.src = cleanPath;
+      previewPath.textContent = cleanPath;
+      previewOpen.href = cleanPath;
       previewBar.style.display = 'flex';
       emptyState.style.display = 'none';
       previewFrame.style.display = 'block';

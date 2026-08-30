@@ -58,22 +58,23 @@ export const OpenDesignPlugin = async ({ client, directory }) => {
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, ".config/opencode");
 
-  // Cache to avoid blocking the Node.js event loop with synchronous file operations
-  // on every chat turn in the experimental.chat.system.transform hook.
-  let cachedBootstrapContent = undefined;
+  // ⚡ Bolt Optimization: Cache the file content to prevent unnecessary reads on every chat turn
+  let cachedBootstrap = null;
 
-  const getBootstrapContent = () => {
-    if (cachedBootstrapContent !== undefined) {
-      return cachedBootstrapContent;
-    }
+  const getBootstrapContent = async () => {
+    if (cachedBootstrap) return cachedBootstrap;
 
     const skillPath = path.join(opendesignSkillsDir, "opendesign", "SKILL.md");
-    if (!fs.existsSync(skillPath)) {
-      cachedBootstrapContent = null;
-      return cachedBootstrapContent;
+
+    // ⚡ Bolt Optimization: Use async fs.promises to prevent blocking the main thread
+    // during the 'experimental.chat.system.transform' hot path which runs every turn.
+    try {
+      await fs.promises.access(skillPath);
+    } catch {
+      return null;
     }
 
-    const fullContent = fs.readFileSync(skillPath, "utf8");
+    const fullContent = await fs.promises.readFile(skillPath, "utf8");
     const { content } = extractAndStripFrontmatter(fullContent);
 
     const toolMapping = `**Tool Mapping for OpenCode:**
@@ -85,7 +86,7 @@ When OpenDesign skills reference tools you don't have, substitute OpenCode equiv
 
 Use OpenCode's native \`skill\` tool to list and load the other OpenDesign skills (wireframe, make-a-deck, interactive-prototype, etc.) on demand.`;
 
-    cachedBootstrapContent = `<EXTREMELY_IMPORTANT>
+    cachedBootstrap = `<EXTREMELY_IMPORTANT>
 You have OpenDesign loaded.
 
 **The opendesign entry-point skill is included below. It is ALREADY LOADED — you are currently following it. Do NOT use the skill tool to load "opendesign" again.**
@@ -95,7 +96,7 @@ ${content}
 ${toolMapping}
 </EXTREMELY_IMPORTANT>`;
 
-    return cachedBootstrapContent;
+    return cachedBootstrap;
   };
 
   return {
@@ -111,7 +112,7 @@ ${toolMapping}
 
     // Use system prompt transform for compatibility with current OpenCode builds.
     "experimental.chat.system.transform": async (_input, output) => {
-      const bootstrap = getBootstrapContent();
+      const bootstrap = await getBootstrapContent();
       if (bootstrap) {
         (output.system ||= []).push(bootstrap);
       }
